@@ -1,11 +1,18 @@
 package com.zc.batch;
 
+import com.alibaba.druid.pool.DruidDataSource;
+import com.zc.dao.AccessRowMapper;
 import com.zc.listener.JobListener;
 import com.zc.model.Access;
+import com.zc.service.TestService;
+
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.mybatis.spring.batch.MyBatisPagingItemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.DefaultBatchConfigurer;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -13,13 +20,16 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JpaPagingItemReader;
-import org.springframework.batch.item.database.orm.JpaNativeQueryProvider;
+import org.springframework.batch.item.database.JdbcCursorItemReader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import java.util.Date;
 
 import javax.annotation.Resource;
-import javax.persistence.EntityManagerFactory;
 
 /**
  * Created by EalenXie on 2018/9/10 14:50.
@@ -27,6 +37,7 @@ import javax.persistence.EntityManagerFactory;
  */
 @Configuration
 @EnableBatchProcessing
+@ComponentScan(basePackageClasses = MyBatchConfigurer.class)
 public class DataBatchConfiguration {
     private static final Logger log = LoggerFactory.getLogger(DataBatchConfiguration.class);
 
@@ -36,11 +47,19 @@ public class DataBatchConfiguration {
     @Resource
     private StepBuilderFactory stepBuilderFactory;  //用于构建Step
 
-    @Resource
-    private EntityManagerFactory emf;           //注入实例化Factory 访问数据
-
+    
     @Resource
     private JobListener jobListener;            //简单的JOB listener
+
+    @Autowired
+    private SqlSessionFactory sqlSessionFactory;
+    @Resource
+    private DruidDataSource  bizDataSource;
+    @Autowired
+    private TestService testServiceImpl;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
 
     /**
      * 一个简单基础的Job通常由一个或者多个Step组成
@@ -65,37 +84,61 @@ public class DataBatchConfiguration {
      */
     @Bean
     public Step handleDataStep() {
-        return stepBuilderFactory.get("getData").
+        return stepBuilderFactory.get("getData").transactionManager(transactionManager).
                 <Access, Access>chunk(100).        // <输入,输出> 。chunk通俗的讲类似于SQL的commit; 这里表示处理(processor)100条后写入(writer)一次。
-                faultTolerant().retryLimit(3).retry(Exception.class).skipLimit(100).skip(Exception.class). //捕捉到异常就重试,重试100次还是异常,JOB就停止并标志失败
+
+//                faultTolerant().retryLimit(0).retry(Exception.class).skipLimit(100).skip(Exception.class). //捕捉到异常就重试,重试100次还是异常,JOB就停止并标志失败
                 reader(getDataReader()).         //指定ItemReader
                 processor(getDataProcessor()).   //指定ItemProcessor
                 writer(getDataWriter()).         //指定ItemWriter
                 build();
     }
 
-    @Bean
-    public ItemReader<? extends Access> getDataReader() {
-        //读取数据,这里可以用JPA,JDBC,JMS 等方式 读入数据
-        JpaPagingItemReader<Access> reader = new JpaPagingItemReader<>();
-        //这里选择JPA方式读数据 一个简单的 native SQL
-        String sqlQuery = "SELECT * FROM access";
-        try {
-            JpaNativeQueryProvider<Access> queryProvider = new JpaNativeQueryProvider<>();
-            queryProvider.setSqlQuery(sqlQuery);
-            queryProvider.setEntityClass(Access.class);
-            queryProvider.afterPropertiesSet();
-            reader.setEntityManagerFactory(emf);
-            reader.setPageSize(3);
-            reader.setQueryProvider(queryProvider);
-            reader.afterPropertiesSet();
-            //所有ItemReader和ItemWriter实现都会在ExecutionContext提交之前将其当前状态存储在其中,如果不希望这样做,可以设置setSaveState(false)
-            reader.setSaveState(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return reader;
-    }
+//    @Bean
+//    public ItemReader<? extends Access> getDataReader() {
+//        //读取数据,这里可以用JPA,JDBC,JMS 等方式 读入数据
+//        JpaPagingItemReader<Access> reader = new JpaPagingItemReader<>();
+//        //这里选择JPA方式读数据 一个简单的 native SQL
+//        String sqlQuery = "SELECT * FROM access";
+//        try {
+//            JpaNativeQueryProvider<Access> queryProvider = new JpaNativeQueryProvider<>();
+//            queryProvider.setSqlQuery(sqlQuery);
+//            queryProvider.setEntityClass(Access.class);
+//            queryProvider.afterPropertiesSet();
+//            reader.setEntityManagerFactory(emf);
+//            reader.setPageSize(3);
+//            reader.setQueryProvider(queryProvider);
+//            reader.afterPropertiesSet();
+//            //所有ItemReader和ItemWriter实现都会在ExecutionContext提交之前将其当前状态存储在其中,如果不希望这样做,可以设置setSaveState(false)
+//            reader.setSaveState(true);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return reader;
+//    }
+    
+  //  mybatis reader
+//  @Bean
+//  public ItemReader<? extends Access> getDataReader() {
+//	  MyBatisPagingItemReader<Access> reader = new MyBatisPagingItemReader();
+//	  reader.setQueryId("com.zc.dao.AccessMapper.selectPaging");
+//	  reader.setSqlSessionFactory(sqlSessionFactory);
+//	  reader.setPageSize(10);
+//      return reader;
+//  }
+    
+  @Bean
+  public ItemReader<? extends Access> getDataReader() {
+	  JdbcCursorItemReader<Access> reader = new JdbcCursorItemReader<Access>();
+	  reader.setDataSource(bizDataSource);
+	  StringBuffer sqlBuff= new StringBuffer();
+	  sqlBuff.append("select id,username,shop_name from access where id<10");
+	  reader.setSql(sqlBuff.toString());
+	  reader.setRowMapper(new AccessRowMapper());
+      return reader;
+  }
+    
+
 
     @Bean
     public ItemProcessor<Access, Access> getDataProcessor() {
@@ -117,7 +160,12 @@ public class DataBatchConfiguration {
     public ItemWriter<Access> getDataWriter() {
         return list -> {
             for (Access access : list) {
-                log.info("write data : " + access); //模拟 假装写数据 ,这里写真正写入数据的逻辑
+            	access.setId(null);
+            	access.setUsername("zhanchang");
+            	access.setUpdateTime(new Date().toString());
+            	int resultNum = testServiceImpl.insert(access);
+//            	int resultNum=0;
+                log.info("write data : " + access+"====resultNum===> "+resultNum); //模拟 假装写数据 ,这里写真正写入数据的逻辑
             }
         };
     }

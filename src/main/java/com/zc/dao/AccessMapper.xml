@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zc.dao.AccessMapper">
+	<resultMap id="BaseResultMap" type="com.zc.model.Access">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="username" property="username" jdbcType="VARCHAR" />
+		<result column="shop_name" property="shopName" jdbcType="VARCHAR" />
+		<result column="category_name" property="categoryName"
+			jdbcType="VARCHAR" />
+		<result column="description" property="description" jdbcType="VARCHAR" />
+		<result column="delete_status" property="deleteStatus"
+			jdbcType="BIT" />
+		<result column="brand_name" property="brandName" jdbcType="VARCHAR" />
+		<result column="shop_id" property="shopId" jdbcType="VARCHAR" />
+		<result column="omit" property="omit" jdbcType="VARCHAR" />
+		<result column="update_time" property="updateTime" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Example_Where_Clause">
+		<where>
+			<foreach collection="oredCriteria" item="criteria" separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" suffix=")" prefixOverrides="and">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value}
+									and
+									#{criterion.secondValue}
+								</when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach collection="criterion.value" item="listItem"
+										open="(" close=")" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+	<sql id="Update_By_Example_Where_Clause">
+		<where>
+			<foreach collection="example.oredCriteria" item="criteria"
+				separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" suffix=")" prefixOverrides="and">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value}
+									and
+									#{criterion.secondValue}
+								</when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach collection="criterion.value" item="listItem"
+										open="(" close=")" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+	<sql id="Base_Column_List">
+		id, username, shop_name, category_name, description,
+		delete_status,
+		brand_name, shop_id,
+		omit, update_time, create_time
+	</sql>
+	<select id="selectByExample" resultMap="BaseResultMap"
+		parameterType="com.zc.model.AccessExample">
+		select
+		<if test="distinct">
+			distinct
+		</if>
+		<include refid="Base_Column_List" />
+		from access
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+		<if test="orderByClause != null">
+			order by ${orderByClause}
+		</if>
+	</select>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Integer">
+		select
+		<include refid="Base_Column_List" />
+		from access
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	
+	<select id="selectPaging" resultMap="BaseResultMap"
+		parameterType="java.lang.Integer">
+		select
+		<include refid="Base_Column_List" />
+		from access
+		limit #{_pagesize} OFFSET #{_skiprows}  
+	</select>
+
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from access
+		where id = #{id,jdbcType=INTEGER}
+	</delete>
+	<delete id="deleteByExample" parameterType="com.zc.model.AccessExample">
+		delete from access
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+	</delete>
+	<insert id="insert" parameterType="com.zc.model.Access">
+		insert into access (id, username, shop_name,
+		category_name, description, delete_status,
+		brand_name, shop_id, omit,
+		update_time, create_time)
+		values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR},
+		#{shopName,jdbcType=VARCHAR},
+		#{categoryName,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{deleteStatus,jdbcType=BIT},
+		#{brandName,jdbcType=VARCHAR}, #{shopId,jdbcType=VARCHAR},
+		#{omit,jdbcType=VARCHAR},
+		#{updateTime,jdbcType=VARCHAR}, #{createTime,jdbcType=VARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.zc.model.Access">
+		insert into access
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="username != null">
+				username,
+			</if>
+			<if test="shopName != null">
+				shop_name,
+			</if>
+			<if test="categoryName != null">
+				category_name,
+			</if>
+			<if test="description != null">
+				description,
+			</if>
+			<if test="deleteStatus != null">
+				delete_status,
+			</if>
+			<if test="brandName != null">
+				brand_name,
+			</if>
+			<if test="shopId != null">
+				shop_id,
+			</if>
+			<if test="omit != null">
+				omit,
+			</if>
+			<if test="updateTime != null">
+				update_time,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=INTEGER},
+			</if>
+			<if test="username != null">
+				#{username,jdbcType=VARCHAR},
+			</if>
+			<if test="shopName != null">
+				#{shopName,jdbcType=VARCHAR},
+			</if>
+			<if test="categoryName != null">
+				#{categoryName,jdbcType=VARCHAR},
+			</if>
+			<if test="description != null">
+				#{description,jdbcType=VARCHAR},
+			</if>
+			<if test="deleteStatus != null">
+				#{deleteStatus,jdbcType=BIT},
+			</if>
+			<if test="brandName != null">
+				#{brandName,jdbcType=VARCHAR},
+			</if>
+			<if test="shopId != null">
+				#{shopId,jdbcType=VARCHAR},
+			</if>
+			<if test="omit != null">
+				#{omit,jdbcType=VARCHAR},
+			</if>
+			<if test="updateTime != null">
+				#{updateTime,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<select id="countByExample" parameterType="com.zc.model.AccessExample"
+		resultType="java.lang.Integer">
+		select count(*) from access
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+	</select>
+	<update id="updateByExampleSelective" parameterType="map">
+		update access
+		<set>
+			<if test="record.id != null">
+				id = #{record.id,jdbcType=INTEGER},
+			</if>
+			<if test="record.username != null">
+				username = #{record.username,jdbcType=VARCHAR},
+			</if>
+			<if test="record.shopName != null">
+				shop_name = #{record.shopName,jdbcType=VARCHAR},
+			</if>
+			<if test="record.categoryName != null">
+				category_name = #{record.categoryName,jdbcType=VARCHAR},
+			</if>
+			<if test="record.description != null">
+				description = #{record.description,jdbcType=VARCHAR},
+			</if>
+			<if test="record.deleteStatus != null">
+				delete_status = #{record.deleteStatus,jdbcType=BIT},
+			</if>
+			<if test="record.brandName != null">
+				brand_name = #{record.brandName,jdbcType=VARCHAR},
+			</if>
+			<if test="record.shopId != null">
+				shop_id = #{record.shopId,jdbcType=VARCHAR},
+			</if>
+			<if test="record.omit != null">
+				omit = #{record.omit,jdbcType=VARCHAR},
+			</if>
+			<if test="record.updateTime != null">
+				update_time = #{record.updateTime,jdbcType=VARCHAR},
+			</if>
+			<if test="record.createTime != null">
+				create_time = #{record.createTime,jdbcType=VARCHAR},
+			</if>
+		</set>
+		<if test="_parameter != null">
+			<include refid="Update_By_Example_Where_Clause" />
+		</if>
+	</update>
+	<update id="updateByExample" parameterType="map">
+		update access
+		set id = #{record.id,jdbcType=INTEGER},
+		username = #{record.username,jdbcType=VARCHAR},
+		shop_name = #{record.shopName,jdbcType=VARCHAR},
+		category_name = #{record.categoryName,jdbcType=VARCHAR},
+		description = #{record.description,jdbcType=VARCHAR},
+		delete_status = #{record.deleteStatus,jdbcType=BIT},
+		brand_name = #{record.brandName,jdbcType=VARCHAR},
+		shop_id = #{record.shopId,jdbcType=VARCHAR},
+		omit = #{record.omit,jdbcType=VARCHAR},
+		update_time = #{record.updateTime,jdbcType=VARCHAR},
+		create_time = #{record.createTime,jdbcType=VARCHAR}
+		<if test="_parameter != null">
+			<include refid="Update_By_Example_Where_Clause" />
+		</if>
+	</update>
+	<update id="updateByPrimaryKeySelective" parameterType="com.zc.model.Access">
+		update access
+		<set>
+			<if test="username != null">
+				username = #{username,jdbcType=VARCHAR},
+			</if>
+			<if test="shopName != null">
+				shop_name = #{shopName,jdbcType=VARCHAR},
+			</if>
+			<if test="categoryName != null">
+				category_name = #{categoryName,jdbcType=VARCHAR},
+			</if>
+			<if test="description != null">
+				description = #{description,jdbcType=VARCHAR},
+			</if>
+			<if test="deleteStatus != null">
+				delete_status = #{deleteStatus,jdbcType=BIT},
+			</if>
+			<if test="brandName != null">
+				brand_name = #{brandName,jdbcType=VARCHAR},
+			</if>
+			<if test="shopId != null">
+				shop_id = #{shopId,jdbcType=VARCHAR},
+			</if>
+			<if test="omit != null">
+				omit = #{omit,jdbcType=VARCHAR},
+			</if>
+			<if test="updateTime != null">
+				update_time = #{updateTime,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.zc.model.Access">
+		update access
+		set username = #{username,jdbcType=VARCHAR},
+		shop_name = #{shopName,jdbcType=VARCHAR},
+		category_name = #{categoryName,jdbcType=VARCHAR},
+		description = #{description,jdbcType=VARCHAR},
+		delete_status = #{deleteStatus,jdbcType=BIT},
+		brand_name = #{brandName,jdbcType=VARCHAR},
+		shop_id = #{shopId,jdbcType=VARCHAR},
+		omit = #{omit,jdbcType=VARCHAR},
+		update_time = #{updateTime,jdbcType=VARCHAR},
+		create_time = #{createTime,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

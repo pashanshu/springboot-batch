@@ -1,15 +1,10 @@
 package com.zc.model;
 
-import javax.persistence.*;
-
 /**
  * Created by EalenXie on 2018/9/10 16:17.
  */
-@Entity
-@Table
+
 public class Access {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     private String username;
     private String shopName;
