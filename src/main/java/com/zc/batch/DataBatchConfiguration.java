@@ -62,7 +62,7 @@ public class DataBatchConfiguration {
 	@Autowired
 	private TestService testServiceImpl;
 	@Autowired
-	private PlatformTransactionManager transactionManager;
+	private PlatformTransactionManager jdbcTransactionManager;
 	@Autowired
 	private ItemProcessor<Access, Access> dataProcessor;
 	@Autowired
@@ -73,7 +73,9 @@ public class DataBatchConfiguration {
 	 */
 	@Bean
 	public Job dataHandleJob() {
-		return jobBuilderFactory.get("dataHandleJob").incrementer(new RunIdIncrementer()).start(handleDataStep()). // start是JOB执行的第一个step
+		return jobBuilderFactory.get("dataHandleJob").
+//				incrementer(new RunIdIncrementer()).
+				start(handleDataStep()). // start是JOB执行的第一个step
 		// next(xxxStep()).
 		// next(xxxStep()).
 		// ...
@@ -88,11 +90,11 @@ public class DataBatchConfiguration {
 	@Bean
 	public Step handleDataStep() {
 		return stepBuilderFactory.get("getData").
-				transactionManager(transactionManager).
+				transactionManager(jdbcTransactionManager).
 				<Access, Access>chunk(100). 
 	    // <输入,输出>。chunk通俗的讲类似于SQL的commit;这里表示处理(processor)100条后写入(writer)一次。
 		// faultTolerant().retryLimit(0).retry(Exception.class).skipLimit(100).skip(Exception.class).
-		// //捕捉到异常就重试,重试100次还是异常,JOB就停止并标志失败
+		// 捕捉到异常就重试,重试100次还是异常,JOB就停止并标志失败
 				reader(getDataReader()). // 指定ItemReader
 				processor(dataProcessor). // 指定ItemProcessor
 				writer(dataWriter). // 指定ItemWriter
@@ -109,7 +111,7 @@ public class DataBatchConfiguration {
 		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
 		queryProvider.setSelectClause(
 				"id,username,shop_name,category_name,description,delete_status,brand_name,shop_id,omit,update_time,create_time"); // 设置查询的列
-		queryProvider.setFromClause("from access"); // 设置要查询的表
+		queryProvider.setFromClause("from access where id<10"); // 设置要查询的表
 		Map<String, Order> sortKeys = new HashMap<String, Order>();// 定义一个集合用于存放排序列
 		sortKeys.put("id", Order.ASCENDING);// 按照升序排序
 		queryProvider.setSortKeys(sortKeys);
