@@ -17,7 +17,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.alibaba.druid.pool.DruidDataSource;
+import java.util.Objects;
 
 @Configuration // 扫描 Mapper 接口并容器管理
 //@MapperScan(basePackages = "com.zc.model", sqlSessionFactoryRef = "springSqlSessionFactory")
@@ -26,7 +26,13 @@ public class DataSourceSpringConfig {
 	@Value("${spring.datasource.type}")
 	private Class<? extends DataSource> dataSourceType;
 
-	@Bean(name = "springDataSource", destroyMethod = "close", initMethod = "init")
+	@Value("${mybatis.mapper-locations}")
+	private String mapper;
+
+	@Value("${mybatis.type-aliases-package}")
+	private String typeAliasesPackage;
+
+	@Bean(name = "springDataSource"/*, destroyMethod = "close", initMethod = "init"*/)
 	@Primary
 	@ConfigurationProperties(prefix = "spring.datasource")
 	public DataSource dataSource() {
@@ -51,15 +57,16 @@ public class DataSourceSpringConfig {
         return new DataSourceTransactionManager(bizDataSource);
     }
 
-	@Bean(name = "springSqlSessionFactory")
+	@Bean(name = "bizSqlSessionFactory")
 	@ConditionalOnMissingBean
 	public SqlSessionFactory sqlSessionFactory() throws Exception {
 		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
 		sqlSessionFactoryBean.setDataSource(bizDataSource());
-		sqlSessionFactoryBean.setTypeAliasesPackage("com.zc.dao");
+		sqlSessionFactoryBean.setTypeAliasesPackage(typeAliasesPackage);
 		sqlSessionFactoryBean.setMapperLocations(
-				new PathMatchingResourcePatternResolver().getResources("classpath:com/zc/dao*//*.xml"));
-		sqlSessionFactoryBean.getObject().getConfiguration().setMapUnderscoreToCamelCase(true);
+				new PathMatchingResourcePatternResolver().getResources(mapper));
+		Objects.requireNonNull(sqlSessionFactoryBean.getObject()).getConfiguration().setMapUnderscoreToCamelCase(true);
+
 		return sqlSessionFactoryBean.getObject();
 	}
 }

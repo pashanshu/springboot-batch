@@ -1,4 +1,4 @@
-target
-.idea
-.settings
-springboot-batch.iml
+/target
+/.idea
+/.settings
+/springboot-batch.iml
