@@ -1,5 +1,4 @@
-/target/
-./README.md
+/target
 /.idea
 /.settings
 /springboot-batch.iml
