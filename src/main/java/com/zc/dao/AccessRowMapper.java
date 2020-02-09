@@ -3,6 +3,7 @@ package com.zc.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.jdbc.core.RowMapper;
 
 import com.zc.model.Access;
