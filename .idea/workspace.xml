@@ -92,6 +92,10 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Application.CollectionTest" />
+      <item itemvalue="Spring Boot.SpringBatchApplication" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Spring Boot.SpringBatchApplication" />
